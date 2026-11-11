@@ -35,8 +35,6 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Hide app content from screenshots and the recent-apps preview.
-        window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         HolyCall.ensureChannel(this)
         setContent {
             HolyTheme {
@@ -47,7 +45,11 @@ class MainActivity : FragmentActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (unlocked && SystemClock.elapsedRealtime() - lastStop > Prefs.get(this).lockSeconds * 1000L) unlocked = false
+        val prefs = Prefs.get(this)
+        applyScreenSecurity(prefs.secureScreen)
+        val within = sessionStillValid(prefs)
+        if (unlocked && !within) unlocked = false
+        else if (!unlocked && within) unlocked = true
         if (Perms.listenerEnabled(this)) {
             try { NotificationListenerService.requestRebind(ComponentName(this, HolyNotifyService::class.java)) }
             catch (_: Exception) {}
@@ -58,6 +60,21 @@ class MainActivity : FragmentActivity() {
     override fun onStop() {
         super.onStop()
         lastStop = SystemClock.elapsedRealtime()
+        Prefs.get(this).lastLeft = lastStop
+    }
+
+    /** True if the user verified recently and came back within the lock time (survives process death). */
+    private fun sessionStillValid(p: Prefs): Boolean {
+        val now = SystemClock.elapsedRealtime()
+        val unlockedAt = p.unlockedAt
+        if (unlockedAt < 0 || now < unlockedAt) return false // never unlocked, or phone rebooted
+        val away = if (p.lastLeft >= unlockedAt) now - p.lastLeft else 0L
+        return away <= p.lockSeconds * 1000L
+    }
+
+    fun applyScreenSecurity(on: Boolean) {
+        if (on) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        else window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
 
     private fun authenticate() {
@@ -73,6 +90,7 @@ class MainActivity : FragmentActivity() {
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     prompting = false; authMsg = ""; unlocked = true
+                    Prefs.get(this@MainActivity).unlockedAt = SystemClock.elapsedRealtime()
                 }
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     prompting = false; authMsg = errString.toString()

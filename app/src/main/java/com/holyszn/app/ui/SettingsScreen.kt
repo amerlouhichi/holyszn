@@ -37,6 +37,7 @@ fun SettingsScreen() {
     var speak by remember { mutableStateOf(prefs.speak) }
     var alertsOn by remember { mutableStateOf(prefs.alertsOn) }
     var storeText by remember { mutableStateOf(prefs.storeText) }
+    var secure by remember { mutableStateOf(prefs.secureScreen) }
     var retention by remember { mutableFloatStateOf(prefs.retentionDays.toFloat()) }
     var lockSec by remember { mutableFloatStateOf(prefs.lockSeconds.toFloat()) }
     var blocked by remember { mutableStateOf(prefs.blockedApps) }
@@ -85,6 +86,14 @@ fun SettingsScreen() {
                 )
                 Text("Result: " + prefs.lastNote.ifBlank { "-" }, fontSize = 12.sp, color = Chrome2)
                 Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = {
+                    try {
+                        ctx.startActivity(
+                            android.content.Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
+                    } catch (_: Exception) {}
+                }) { Text("BATTERY SETTINGS (KEEP ALIVE)") }
                 OutlinedButton(onClick = {
                     try { NotificationListenerService.requestRebind(ComponentName(ctx, HolyNotifyService::class.java)) }
                     catch (_: Exception) {}
@@ -138,6 +147,13 @@ fun SettingsScreen() {
                     Text("Store message text (off = titles only)", Modifier.weight(1f))
                     Switch(checked = storeText, onCheckedChange = { storeText = it; prefs.storeText = it })
                 }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Hide app from screenshots and recent apps", Modifier.weight(1f))
+                    Switch(checked = secure, onCheckedChange = {
+                        secure = it; prefs.secureScreen = it
+                        (ctx.findActivity() as? com.holyszn.app.MainActivity)?.applyScreenSecurity(it)
+                    })
+                }
                 Text("Keep notifications: ${retention.toInt()} days", fontSize = 13.sp)
                 Slider(
                     value = retention, onValueChange = { retention = it },
@@ -148,7 +164,7 @@ fun SettingsScreen() {
                 Slider(
                     value = lockSec, onValueChange = { lockSec = it },
                     onValueChangeFinished = { prefs.lockSeconds = lockSec.toInt() },
-                    valueRange = 0f..300f
+                    valueRange = 0f..900f
                 )
                 OutlinedTextField(
                     value = blocked,

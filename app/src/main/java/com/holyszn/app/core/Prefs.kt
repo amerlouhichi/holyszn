@@ -46,8 +46,18 @@ class Prefs private constructor(ctx: Context) {
         get() = sp.getBoolean("storeText", true)
         set(v) = sp.edit().putBoolean("storeText", v).apply()
     var lockSeconds: Int
-        get() = sp.getInt("lockSeconds", 30)
+        get() = sp.getInt("lockSeconds", 180)
         set(v) = sp.edit().putInt("lockSeconds", v).apply()
+
+    var unlockedAt: Long
+        get() = sp.getLong("unlockedAt", -1L)
+        set(v) = sp.edit().putLong("unlockedAt", v).apply()
+    var lastLeft: Long
+        get() = sp.getLong("lastLeft", -1L)
+        set(v) = sp.edit().putLong("lastLeft", v).apply()
+    var secureScreen: Boolean
+        get() = sp.getBoolean("secureScreen", false)
+        set(v) = sp.edit().putBoolean("secureScreen", v).apply()
 
     companion object {
         const val DEFAULT_BLOCKED =

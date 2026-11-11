@@ -96,3 +96,12 @@ fun MicButton(onText: (String) -> Unit) {
 
 fun fmtTime(t: Long): String =
     SimpleDateFormat("dd MMM HH:mm", Locale.getDefault()).format(Date(t))
+
+fun android.content.Context.findActivity(): Activity? {
+    var c: android.content.Context = this
+    while (c is android.content.ContextWrapper) {
+        if (c is Activity) return c
+        c = c.baseContext
+    }
+    return null
+}
