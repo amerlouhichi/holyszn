@@ -8,6 +8,7 @@ import android.service.notification.StatusBarNotification
 import com.holyszn.app.call.HolyCall
 import com.holyszn.app.core.HolyCore
 import com.holyszn.app.core.Prefs
+import com.holyszn.app.core.Privacy
 import com.holyszn.app.data.HolyDb
 import com.holyszn.app.data.NotifEntity
 import kotlinx.coroutines.*
@@ -48,13 +49,16 @@ class HolyNotifyService : NotificationListenerService() {
         if (sbn.packageName == packageName) { prefs.lastNote = "skipped: own notification"; return }
         val n = sbn.notification ?: return
         if (n.flags and Notification.FLAG_ONGOING_EVENT != 0) { prefs.lastNote = "skipped: ongoing"; return }
+        if (Privacy.isPrivateApp(this, sbn.packageName)) {
+            prefs.lastNote = "skipped: private app (${sbn.packageName})"; return
+        }
 
         val ex = n.extras
-        val title = (ex.getCharSequence(Notification.EXTRA_TITLE)
+        val title = Privacy.redact((ex.getCharSequence(Notification.EXTRA_TITLE)
             ?: ex.getCharSequence(Notification.EXTRA_TITLE_BIG)
             ?: ex.getCharSequence(Notification.EXTRA_CONVERSATION_TITLE)
-            ?: n.tickerText)?.toString().orEmpty()
-        val text = extractText(ex)
+            ?: n.tickerText)?.toString().orEmpty())
+        val text = Privacy.redact(extractText(ex))
         if (title.isBlank() && text.isBlank()) { prefs.lastNote = "skipped: empty (${sbn.packageName})"; return }
 
         val key = "${sbn.packageName}|$title|$text"
@@ -76,14 +80,14 @@ class HolyNotifyService : NotificationListenerService() {
             val db = HolyDb.get(applicationContext)
             db.notifDao().insert(
                 NotifEntity(
-                    pkg = sbn.packageName, app = app, title = title, text = text,
+                    pkg = sbn.packageName, app = app, title = title, text = if (prefs.storeText) text else "",
                     score = verdict.score, urgent = verdict.urgent, time = now
                 )
             )
-            db.notifDao().prune(now - 30L * 24 * 3600 * 1000)
+            db.notifDao().prune(now - prefs.retentionDays * 24L * 3600 * 1000)
         }
         if (verdict.urgent && prefs.alertsOn) {
-            HolyCall.fire(this, "$app: ${title.ifBlank { "New message" }}", text.take(300))
+            HolyCall.fire(this, "$app: ${title.ifBlank { "New message" }}", (if (prefs.storeText) text.take(300) else ""))
         }
     }
 

@@ -36,7 +36,23 @@ class Prefs private constructor(ctx: Context) {
         get() = sp.getString("lastNote", "") ?: ""
         set(v) = sp.edit().putString("lastNote", v).apply()
 
+    var blockedApps: String
+        get() = sp.getString("blockedApps", DEFAULT_BLOCKED) ?: DEFAULT_BLOCKED
+        set(v) = sp.edit().putString("blockedApps", v).apply()
+    var retentionDays: Int
+        get() = sp.getInt("retentionDays", 7)
+        set(v) = sp.edit().putInt("retentionDays", v).apply()
+    var storeText: Boolean
+        get() = sp.getBoolean("storeText", true)
+        set(v) = sp.edit().putBoolean("storeText", v).apply()
+    var lockSeconds: Int
+        get() = sp.getInt("lockSeconds", 30)
+        set(v) = sp.edit().putInt("lockSeconds", v).apply()
+
     companion object {
+        const val DEFAULT_BLOCKED =
+            "bank,banque,paypal,authenticator,authy,bitwarden,keepass,1password,lastpass,wallet,revolut,binance,payoneer,poste"
+
         const val DEFAULT_KEYWORDS =
             "urgent,emergency,asap,immediately,important,critical,security,fraud,suspicious,hospital,accident,deadline,عاجل,طارئ,urgence"
         @Volatile private var inst: Prefs? = null

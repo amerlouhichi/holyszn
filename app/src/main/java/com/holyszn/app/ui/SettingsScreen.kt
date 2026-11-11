@@ -36,6 +36,10 @@ fun SettingsScreen() {
     var threshold by remember { mutableFloatStateOf(prefs.threshold.toFloat()) }
     var speak by remember { mutableStateOf(prefs.speak) }
     var alertsOn by remember { mutableStateOf(prefs.alertsOn) }
+    var storeText by remember { mutableStateOf(prefs.storeText) }
+    var retention by remember { mutableFloatStateOf(prefs.retentionDays.toFloat()) }
+    var lockSec by remember { mutableFloatStateOf(prefs.lockSeconds.toFloat()) }
+    var blocked by remember { mutableStateOf(prefs.blockedApps) }
 
     val postLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
@@ -117,6 +121,54 @@ fun SettingsScreen() {
                 OutlinedButton(onClick = {
                     keywords = Prefs.DEFAULT_KEYWORDS; prefs.keywords = keywords
                 }) { Text("RESET KEYWORDS") }
+            }
+        }
+
+        item {
+            HoloCard {
+                Label("PRIVACY")
+                Text(
+                    "This app only uses: notification access, posting its own alerts, full-screen alerts " +
+                        "and your screen lock. It has no internet, microphone, camera, contacts, SMS or " +
+                        "location permission.",
+                    fontSize = 12.sp, color = Chrome2
+                )
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Store message text (off = titles only)", Modifier.weight(1f))
+                    Switch(checked = storeText, onCheckedChange = { storeText = it; prefs.storeText = it })
+                }
+                Text("Keep notifications: ${retention.toInt()} days", fontSize = 13.sp)
+                Slider(
+                    value = retention, onValueChange = { retention = it },
+                    onValueChangeFinished = { prefs.retentionDays = retention.toInt() },
+                    valueRange = 1f..30f
+                )
+                Text("Lock after leaving the app: ${lockSec.toInt()} s", fontSize = 13.sp)
+                Slider(
+                    value = lockSec, onValueChange = { lockSec = it },
+                    onValueChangeFinished = { prefs.lockSeconds = lockSec.toInt() },
+                    valueRange = 0f..300f
+                )
+                OutlinedTextField(
+                    value = blocked,
+                    onValueChange = { blocked = it; prefs.blockedApps = it },
+                    label = { Text("Ignored apps (part of the app id, comma separated)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text("Notifications from these apps are never read or stored. One-time codes are hidden as ••••.",
+                    fontSize = 11.sp, color = Chrome2)
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = {
+                    blocked = Prefs.DEFAULT_BLOCKED; prefs.blockedApps = blocked
+                }) { Text("RESET IGNORED APPS") }
+                Spacer(Modifier.height(4.dp))
+                Button(
+                    onClick = {
+                        scope.launch(kotlinx.coroutines.Dispatchers.IO) { HolyDb.get(ctx).clearAllTables() }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Red)
+                ) { Text("PANIC WIPE: DELETE ALL MY DATA") }
             }
         }
 

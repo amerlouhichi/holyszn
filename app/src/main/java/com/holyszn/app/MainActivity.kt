@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import com.holyszn.app.call.HolyCall
+import com.holyszn.app.core.Prefs
 import com.holyszn.app.ui.*
 
 class MainActivity : FragmentActivity() {
@@ -46,7 +47,7 @@ class MainActivity : FragmentActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (unlocked && SystemClock.elapsedRealtime() - lastStop > 30_000) unlocked = false
+        if (unlocked && SystemClock.elapsedRealtime() - lastStop > Prefs.get(this).lockSeconds * 1000L) unlocked = false
         if (Perms.listenerEnabled(this)) {
             try { NotificationListenerService.requestRebind(ComponentName(this, HolyNotifyService::class.java)) }
             catch (_: Exception) {}
