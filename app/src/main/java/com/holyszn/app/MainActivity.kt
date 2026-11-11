@@ -1,6 +1,10 @@
 package com.holyszn.app
 
+import android.content.ComponentName
 import android.os.Bundle
+import android.service.notification.NotificationListenerService
+import com.holyszn.app.notify.HolyNotifyService
+import com.holyszn.app.util.Perms
 import android.os.SystemClock
 import android.view.WindowManager
 import androidx.activity.compose.setContent
@@ -43,6 +47,10 @@ class MainActivity : FragmentActivity() {
     override fun onStart() {
         super.onStart()
         if (unlocked && SystemClock.elapsedRealtime() - lastStop > 30_000) unlocked = false
+        if (Perms.listenerEnabled(this)) {
+            try { NotificationListenerService.requestRebind(ComponentName(this, HolyNotifyService::class.java)) }
+            catch (_: Exception) {}
+        }
         if (!unlocked) authenticate()
     }
 

@@ -1,6 +1,9 @@
 package com.holyszn.app.ui
 
+import android.content.ComponentName
 import android.os.Build
+import android.service.notification.NotificationListenerService
+import com.holyszn.app.notify.HolyNotifyService
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -59,6 +62,30 @@ fun SettingsScreen() {
                 )
                 Spacer(Modifier.height(6.dp))
                 OutlinedButton(onClick = { Perms.openAppDetails(ctx) }) { Text("OPEN APP INFO") }
+            }
+        }
+
+        item {
+            HoloCard {
+                Label("LISTENER STATUS")
+                val ok = listener && prefs.connected
+                Text(
+                    if (!listener) "Notification access is OFF"
+                    else if (prefs.connected) "CONNECTED" else "ENABLED but NOT CONNECTED",
+                    color = if (ok) Chrome1 else Red, fontFamily = FontFamily.Monospace
+                )
+                Text("Notifications seen: ${prefs.seen}", fontSize = 13.sp, color = Chrome2)
+                Text(
+                    "Last: " + (if (prefs.lastSeen > 0) fmtTime(prefs.lastSeen) else "never") +
+                        " • " + prefs.lastPkg, fontSize = 12.sp, color = Chrome2
+                )
+                Text("Result: " + prefs.lastNote.ifBlank { "-" }, fontSize = 12.sp, color = Chrome2)
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = {
+                    try { NotificationListenerService.requestRebind(ComponentName(ctx, HolyNotifyService::class.java)) }
+                    catch (_: Exception) {}
+                }) { Text("RECONNECT LISTENER") }
+                Text("Leave this tab, then come back to refresh the numbers.", fontSize = 11.sp, color = Chrome2)
             }
         }
 

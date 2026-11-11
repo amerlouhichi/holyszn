@@ -20,6 +20,22 @@ class Prefs private constructor(ctx: Context) {
         get() = sp.getBoolean("alertsOn", true)
         set(v) = sp.edit().putBoolean("alertsOn", v).apply()
 
+    var connected: Boolean
+        get() = sp.getBoolean("connected", false)
+        set(v) = sp.edit().putBoolean("connected", v).apply()
+    var seen: Int
+        get() = sp.getInt("seen", 0)
+        set(v) = sp.edit().putInt("seen", v).apply()
+    var lastSeen: Long
+        get() = sp.getLong("lastSeen", 0L)
+        set(v) = sp.edit().putLong("lastSeen", v).apply()
+    var lastPkg: String
+        get() = sp.getString("lastPkg", "") ?: ""
+        set(v) = sp.edit().putString("lastPkg", v).apply()
+    var lastNote: String
+        get() = sp.getString("lastNote", "") ?: ""
+        set(v) = sp.edit().putString("lastNote", v).apply()
+
     companion object {
         const val DEFAULT_KEYWORDS =
             "urgent,emergency,asap,immediately,important,critical,security,fraud,suspicious,hospital,accident,deadline,عاجل,طارئ,urgence"
