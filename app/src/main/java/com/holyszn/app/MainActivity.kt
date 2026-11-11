@@ -47,6 +47,7 @@ class MainActivity : FragmentActivity() {
         super.onStart()
         val prefs = Prefs.get(this)
         applyScreenSecurity(prefs.secureScreen)
+        if (prefs.keepAlive) com.holyszn.app.notify.KeepAliveService.start(this)
         val within = sessionStillValid(prefs)
         if (unlocked && !within) unlocked = false
         else if (!unlocked && within) unlocked = true

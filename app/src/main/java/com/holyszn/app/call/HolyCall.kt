@@ -38,6 +38,7 @@ object HolyCall {
 
     fun fire(ctx: Context, title: String, text: String) {
         ensureChannel(ctx)
+        com.holyszn.app.core.Prefs.get(ctx).lastAlertAt = System.currentTimeMillis()
         val i = Intent(ctx, AlertActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             .putExtra("title", title).putExtra("text", text)

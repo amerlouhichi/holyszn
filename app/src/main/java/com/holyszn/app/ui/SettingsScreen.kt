@@ -38,6 +38,7 @@ fun SettingsScreen() {
     var alertsOn by remember { mutableStateOf(prefs.alertsOn) }
     var storeText by remember { mutableStateOf(prefs.storeText) }
     var secure by remember { mutableStateOf(prefs.secureScreen) }
+    var keepAlive by remember { mutableStateOf(prefs.keepAlive) }
     var retention by remember { mutableFloatStateOf(prefs.retentionDays.toFloat()) }
     var lockSec by remember { mutableFloatStateOf(prefs.lockSeconds.toFloat()) }
     var blocked by remember { mutableStateOf(prefs.blockedApps) }
@@ -85,6 +86,18 @@ fun SettingsScreen() {
                         " • " + prefs.lastPkg, fontSize = 12.sp, color = Chrome2
                 )
                 Text("Result: " + prefs.lastNote.ifBlank { "-" }, fontSize = 12.sp, color = Chrome2)
+                Text(
+                    "Last alert fired: " + (if (prefs.lastAlertAt > 0) fmtTime(prefs.lastAlertAt) else "never"),
+                    fontSize = 12.sp, color = Chrome2
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Keep alive (small 'watching' notification)", Modifier.weight(1f))
+                    Switch(checked = keepAlive, onCheckedChange = {
+                        keepAlive = it; prefs.keepAlive = it
+                        if (it) com.holyszn.app.notify.KeepAliveService.start(ctx)
+                        else com.holyszn.app.notify.KeepAliveService.stop(ctx)
+                    })
+                }
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(onClick = {
                     try {

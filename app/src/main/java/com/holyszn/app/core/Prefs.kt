@@ -59,6 +59,13 @@ class Prefs private constructor(ctx: Context) {
         get() = sp.getBoolean("secureScreen", false)
         set(v) = sp.edit().putBoolean("secureScreen", v).apply()
 
+    var keepAlive: Boolean
+        get() = sp.getBoolean("keepAlive", true)
+        set(v) = sp.edit().putBoolean("keepAlive", v).apply()
+    var lastAlertAt: Long
+        get() = sp.getLong("lastAlertAt", 0L)
+        set(v) = sp.edit().putLong("lastAlertAt", v).apply()
+
     companion object {
         const val DEFAULT_BLOCKED =
             "bank,banque,paypal,authenticator,authy,bitwarden,keepass,1password,lastpass,wallet,revolut,binance,payoneer,poste"
